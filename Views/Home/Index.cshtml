@@ -1,0 +1,49 @@
+﻿@{
+    ViewBag.Title = "Battle Robot";
+}
+
+@section scripts{
+    <script>
+            // Crea una conexión con tu Hub
+            var hub = $.connection.robotHub;
+
+            // Inicia la conexión
+            $.connection.hub.start()
+                .done(function () {
+                    console.log('Now connected, connection ID=' + $.connection.hub.id);
+                })
+                .fail(function () {
+                    console.log('Could not Connect!');
+                });
+
+            //Recibes los cambios que ha tenido cada robot
+            hub.client.ReceiveNotification = function (infoRobot) {
+                let json = JSON.parse(infoRobot);
+                console.log(json);
+            };
+
+            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+            hub.client.ClearAllBoard = function () {
+                console.log("ClearAllBoard");
+            };
+
+            var robot = {
+                id: 'XXXX',//guid,
+                title: 'MI NOMBRE',
+                url: 'URL PUBLICA DE UNA IMAGEN',
+                color: '#000000',
+                position: { x: 0, y: 0 },
+            };
+
+            //EJEMPLO
+            function setPosition(x, y) {
+                robot.position.x = x;
+                robot.position.y = y;
+                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            }
+
+            //De esta forma notificas a los demás la posición de tu robot
+            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+
+    </script>    
+}
