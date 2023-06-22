@@ -36,9 +36,8 @@
             };
 
             //EJEMPLO
-            function setPosition(x, y) {
-                robot.position.x = x;
-                robot.position.y = y;
+        function setPosition(x, y) {
+                //de esta manera notificamos a los demás la nueva posición de nuestro robot
                 hub.invoke('SendRobotInformation', JSON.stringify(robot));
             }
 
