@@ -2,47 +2,94 @@
     ViewBag.Title = "Battle Robot";
 }
 
+
+
+<canvas id="lienzo" width="300" height="300" style="border: 1px solid"></canvas>
+
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        var canvas, context;
+        var vertical = 20, horizontal = 20;
+        var gw = 300 / horizontal;
+        var gh = 300 / vertical;
+        var posicion = { x: 0, y: 0 };
+        window.onload = function () {
+            canvas = document.getElementById('lienzo');
+            context = canvas.getContext('2d');
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
-
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
-
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
-
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
-
-            //EJEMPLO
-        function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            canvas.onmouseup = function (event) {
+                posicion.x = Math.floor(event.clientX / gw);
+                posicion.y = Math.floor(event.clientY / gh);
+                drawSquare(posicion.x, posicion.y, "#5E38CF");
+                setPosition(posicion.x, posicion.y)
             }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+      
+            fillBackground();
+        }
 
-    </script>    
+
+    @*    document.addEventListener('keydown', (event) => {
+            var name = event.key;
+            if (name.toUpperCase() == 'W') {
+                posicion.x + 1 
+            }
+
+*@
+        function drawSquare(x, y, color) {
+            context.fillStyle = color;
+            var rx = x * gw;
+            var ry = y * gh;
+            context.fillRect(rx, ry, gw, gh);
+        }
+
+        function fillBackground() {
+            context.fillStyle = '#fff';
+            context.fillRect(0, 0, 300, 300);
+        }
+
+
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
+
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
+
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            console.log(json)
+            drawSquare(json.position.x, json.position.y, json.color);
+            console.log(json.position.x + json.title);
+        };
+
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
+
+        var robot = {
+            id: '5656',//guid,
+            title: 'Guerra',
+            url: 'https://www.google.com/url?sa=i&url=https%3A%2F%2Ftheconversation.com%2Fmuch-wow-very-meme-what-the-revival-of-the-ancient-doge-meme-tells-us-about-the-lifecycle-of-the-internet-203560&psig=AOvVaw3-65Rh2JkNhTaWOS7Z6gxn&ust=1687643863736000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCIim5rmx2v8CFQAAAAAdAAAAABAE',
+            color: '#5E38CF',
+            position: { x: posicion.x, y: posicion.y },
+        };
+
+        //EJEMPLO
+        function setPosition(x, y) {
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+                        //De esta forma notificas a los demás la posición de tu robot
+                        //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+
+    </script>
 }
