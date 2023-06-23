@@ -2,47 +2,216 @@
     ViewBag.Title = "Battle Robot";
 }
 
-@section scripts{
-    <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+@section styles{
+    <style type="text/css">
+        #battlefield {
+            margin: auto;
+        }
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        table, td, th {
+            border-collapse: collapse;
+            border: 1px solid #cbcbcb;
+        }
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+        td {
+            width: 50px;
+            text-align: center;
+        }
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
-
-            //EJEMPLO
-        function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            td.fire {
+                background-color: red;
             }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        tr {
+            height: 50px;
+        }
 
-    </script>    
+        img {
+            width: 35px;
+        }
+    </style>
+}
+
+<table id="battlefield">
+</table>
+
+<button class="btn btn-default clear">Limpiar Tablero</button>
+
+@section scripts{
+    <script>
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
+
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+
+                initBattleField();
+                moveRobot();
+
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
+
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+
+            let json = JSON.parse(infoRobot);
+
+            console.log(json);
+
+            let existe = robots.filter((item) => {
+                return item.id == json.id;
+            })
+
+            if (existe.length == 0) {
+                robots.push(json);
+            }
+
+            let image = getImage(json);
+            image.css({ 'background-color': json.color });
+            getCurrentCell(json.position).append(image);
+            fireRobot(json);
+
+        };
+
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+            $table.find("td[data-owner]").css({ 'background-color': '#FFF' });
+            $table.find("td[data-owner]").removeAttr("data-owner");
+        };
+
+        let getImage = function (newRobot) {
+
+            if ($("#robot" + newRobot.id).length > 0) {
+                return $("#robot" + newRobot.id);
+            }
+
+            let template = `<img src="${newRobot.url}" id='robot${newRobot.id}' title="${newRobot.title}">`;
+
+            $("body").append($(template))
+
+            return getImage(newRobot);
+        }
+
+
+        let $table = $("#battlefield");
+
+        let robot = {
+            id: 'a782edcd-1547-4947-b0cb-4d01c1a31d68',
+            title: 'Ciro',
+            url: 'https://i.pinimg.com/originals/c0/34/8c/c0348c853a20c3642fb5fc1aaab31da4.png',
+            color: '#D5AE00',
+            position: { x: 0, y: 0 },
+        };
+
+        window.robots = [robot];
+
+        let $imageRobot = getImage(robot);
+
+        let size = 20;
+
+        let initBattleField = function () {
+
+            for (let r = 0; r < size; r++) {
+
+                let newRow = $(`<tr data-y='${r}'></tr>`);
+
+                for (let f = 0; f < size; f++) {
+                    newRow.append(`<td data-x='${f}'> </td>`);
+                }
+
+                $table.append(newRow);
+            }
+        }
+
+        let moveRobot = function (direccion) {
+            switch (direccion) {
+                case 'up':
+                    if (robot.position.y == 0) return;
+                    robot.position.y--;
+                    break;
+                case 'down':
+                    if (robot.position.y == size) return;
+                    robot.position.y++;
+                    break;
+                case 'rigth':
+                    if (robot.position.x == size) return;
+                    robot.position.x++;
+                    break;
+                case 'left':
+                    if (robot.position.x == 0) return;
+                    robot.position.x--;
+                    break;
+
+            }
+
+            fireRobot(robot);
+            refreshRobot();
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+        let refreshRobot = function () {
+            $imageRobot.css({ 'background-color': robot.color });
+            getCurrentCell(robot.position).append($imageRobot);
+        }
+
+        let getCurrentCell = function (position) {
+
+            let cellPosition = $table.find(`tr[data-y='${position.y}']`)
+                .find(`td[data-x='${position.x}']`);
+
+            return cellPosition;
+        }
+
+        let fireRobot = function (item) {
+            getCurrentCell(item.position).css({ 'background-color': item.color });
+            getCurrentCell(item.position).attr("data-owner", item.id);
+
+            refreshTotals();
+        }
+
+        let refreshTotals = function () {
+
+            $.each(robots, function (i, item) {
+                item.total = $(`td[data-owner='${item.id}']`).length;
+            });
+
+            let ordenado = robots.sort(function (a, b) {
+                return a.total < b.total ? 1 : -1;
+            });
+
+            $.each(ordenado, function (i, item) {
+                console.log(i + 1, item.title, item.total);
+            });
+
+        }
+
+        $(document).on("keydown", function (e) {
+
+            if (e.which == 37) {
+                moveRobot('left');
+            } else
+                if (e.which == 39) {
+                    moveRobot('rigth');
+                } else
+                    if (e.which == 38) {
+                        moveRobot('up');
+                    } else
+
+                        if (e.which == 40) {
+                            moveRobot('down');
+                        }
+            return;
+        });
+
+        $(".clear").on("click", function () {
+            hub.invoke('ClearAll');
+        });
+
+    </script>
 }

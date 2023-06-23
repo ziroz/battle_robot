@@ -9,5 +9,11 @@ namespace BattleRobot.Models
             // Envía la notificación a todos los clientes excepto al que envió el mensaje
             Clients.Others.ReceiveNotification(robot);
         }
+
+        public void ClearAll()
+        {
+            // Envía la notificación a todos los clientes excepto al que envió el mensaje
+            Clients.All.ClearAllBoard();
+        }
     }
 }
