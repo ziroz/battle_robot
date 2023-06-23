@@ -2,47 +2,125 @@
     ViewBag.Title = "Battle Robot";
 }
 
-@section scripts{
-    <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+<div class="matrix">
+    <table>
+        
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+@for (int i = 0; i < 20; i++)
+{
+    <tr class="row"></tr>
+    for (int j = 0; j < 20; j++)
+    {
+        <td class="cell"></td>
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+    }
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
-
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
-
-            //EJEMPLO
-        function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
-            }
-
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
-
-    </script>    
 }
+    </table>
+</div>
+
+
+@section scripts{
+    <style>
+
+        .matrix {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .cell {
+            border: 1px solid black;
+            padding: 60px;
+            
+        }
+    </style>
+    <script>
+
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
+        const snakeboard = document.getElementById("snakeboard");
+
+        const snakeboard_ctx = snakeboard.getContext("2d");
+
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
+
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            console.log(json);
+        };
+
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
+
+        var robot = {
+            id: '1000',//guid,
+            title: 'Pablo Caro',
+            url: 'https://cdn-icons-png.flaticon.com/512/942/942354.png?w=740&t=st=1687547872~exp=1687548472~hmac=14ea663fbaf1d711e851f10cbec6fb471788aafd6e00cff9a56cc85065eae665',
+            color: '#470050',
+            position: { x: 0, y: 0 },
+        };
+
+        //EJEMPLO
+        function setPosition(x, y) {
+
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+        //De esta forma notificas a los demás la posición de tu robot
+        //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+
+
+
+        function change_direction(event) {
+            const LEFT_KEY = 37;
+            const RIGHT_KEY = 39;
+            const UP_KEY = 38;
+            const DOWN_KEY = 40;
+
+            // Prevent the snake from reversing
+
+            if (changing_direction) return;
+            changing_direction = true;
+            const keyPressed = event.keyCode;
+            const goingUp = dy === -10;
+            const goingDown = dy === 10;
+            const goingRight = dx === 10;
+            const goingLeft = dx === -10;
+            if (keyPressed === LEFT_KEY && !goingRight) {
+                dx = -10;
+                dy = 0;
+            }
+            if (keyPressed === UP_KEY && !goingDown) {
+                dx = 0;
+                dy = -10;
+            }
+            if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dx = 10;
+                dy = 0;
+            }
+            if (keyPressed === DOWN_KEY && !goingUp) {
+                dx = 0;
+                dy = 10;
+            }
+        }
+
+
+    </script>
+
+}
+
