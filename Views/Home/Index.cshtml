@@ -1,48 +1,181 @@
 ﻿@{
     ViewBag.Title = "Battle Robot";
+
+    var tamanioTablero = 10;
+    var guid = new Guid("fafc6bf9-c28e-4e2f-b61f-416ea1f2ff15");
 }
+
+<style>
+    #tablero {
+        width: 55%;
+        
+    }
+
+    .fila-tablero{
+        display: flex;
+        height: 45px;
+    }
+
+    .celda-tablero {
+        flex: 1;
+        border: 1px solid #000;
+    }
+
+    .jugador {
+        width: 35px;
+        height: 35px;
+    }
+
+    .jugador img {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+
+<div id="tablero">
+    @for (int i = 0; i < tamanioTablero; i++)
+    {
+        <div class="fila-tablero">
+            @for (int j = 0; j < tamanioTablero; j++)
+            {
+                <div class="celda-tablero" data-fila="@i" data-celda="@j" id-robot=""></div>
+            }
+        </div>
+    }
+</div>
+
+
 
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        
+        // Crea una conexión con tu Hub
+        let hub = $.connection.robotHub;
+        const robots = [];
+        const $tablero = $("#tablero");
+        const imgRobot = "<div class='jugador' #propio><img src='#link-imagen'/></div>";
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            actualizarRobot(json);
+        };
+
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
+
+        const robot = {
+            id: '@guid',//guid,
+            title: 'Juanes',
+            url: 'https://www.akinrobotics.com/en/humanoid-robot/img/akinci-4/insansi-robot-akinci-4.webp',
+            color: '#41a5ee',
+            position: { x: 0, y: 0 },
+        };
+
+        const movimientos = {
+            arriba: 119,
+            abajo: 115,
+            izquierda: 97,
+            derecha: 100
+        }
+
+        function sendPosition() {
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+        function actualizarRobot() {
+            //Validamos si el robot ya existe o no.
+            let enJuego = validarRobotEnJuego();
+
+            //Si hay robot en juego, debemos de quitarlo del tablero, sino lo agregamos.
+            if (enJuego) removerRobot(robot);
+            else agregarRobotJuego();
+
+            mostrarRobot(robot, robot.position, propio)
+        }
+
+        function moverRobot(robot, propio) {
+            
+        }
+
+        function validarRobotEnJuego(robot) {
+            let robotEnJuego = false;
+
+            if (robots.length > 0)
+                robotEnJuego = robots.findIndex(r => r.id == robot.id) !== -1;
+
+            return robotEnJuego;
+        }
+
+        function agregarRobotJuego() {
+            robots.push(robot);
+        }
+
+        function removerRobot(robot) {
+            console.log("remover imagen");
+
+            const $celdaRobot = $tablero.find(`[id-robot="${robot.id}"]`);
+
+            console.log($celdaRobot);
+
+            $celdaRobot.html("");
+            $celdaRobot.attr("id-robot", "");
+        }
+
+        function mostrarRobot(robot, { x, y }, propio) {
+            let $celda = $tablero.find(`[data-fila="${y}"][data-celda="${x}"]`)
+            console.log("mostrar");
+            console.log($celda);
+            if ($celda.length == 0) {
+                console.log("borde");
+                return false;
             };
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+            console.log("mover");
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
 
-            //EJEMPLO
-        function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            let divRobot = imgRobot.replace("#link-imagen", robot.url).replace("#propio", propio ? "propio" : "");
+
+            $celda.html(divRobot);
+            $celda.attr("id-robot", robot.id);
+            $celda.css("background-color", `${robot.color}`)
+        }
+
+        moverRobot(robot, true);
+
+        $(document).on("keypress", function(event) {
+            switch (event.which) {
+                case movimientos.arriba:
+                    robot.position.y--;
+                    break;
+                case movimientos.abajo:
+                    robot.position.y++;
+                    break;
+                case movimientos.derecha:
+                    robot.position.x++;
+                    break;
+                case movimientos.izquierda:
+                    robot.position.x--;
+                    break;
+                default:
             }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            sendPosition();
+            moverRobot(robot, true);
+        })
 
     </script>    
 }
