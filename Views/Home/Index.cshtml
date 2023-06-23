@@ -1,48 +1,217 @@
 ﻿@{
-    ViewBag.Title = "Battle Robot";
+        ViewBag.Title = "Battle Robot";
 }
+
+<table id="tablero">
+</table>
+
+<div id="miRobot" class="robot">
+    <img class="imagenRobot" />
+</div>
+
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+
+    #tablero {
+        margin: 0 auto;
+        width: 800px;
+        height: 650px;
+    }
+
+    .celda {
+        width: 5px;
+        height: 10px;
+        max-width: 5px;
+        max-height: 10px;
+        border: 1px solid #000f;
+    }
+
+    .robot{
+        position:relative; 
+        width: 10px;
+        height: 8px;
+    }
+
+    .imagenRobot {
+        position: absolute;
+        margin: 0 auto;
+        width: 33px;
+        top: -13px;
+        left: 2px;
+
+    }
+
+
+
+
+</style>
+
 
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let jsonInfo = JSON.parse(infoRobot);
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+            let robot = getRobot(jsonInfo);
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
+            moveRobot(robot, jsonInfo);
+            
+        };
 
-            //EJEMPLO
-        function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
+
+        var data = {
+            id: '1000411742-3e557c4a-bb6a-45dc-9db1-57732ba311cc',//guid,
+            title: 'David herrera',
+            url: 'https://cdn-icons-png.flaticon.com/128/3570/3570207.png',
+            color: '#f37c7b',
+            position: { x: 1, y: 1 },
+        };
+
+        function getRobot(infoRobot) {
+
+            if (robots.find(robot => robot.id === infoRobot.id)) {
+
+                return robots.find(robot => robot.id === infoRobot.id);
             }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            let robot = document.createElement('div');
+            let image = document.createElement('img');
 
-    </script>    
+            robot.id = infoRobot.id;
+            robot.classList.add('robot');
+
+            image.setAttribute('src', infoRobot.url);
+            image.classList.add('imagenRobot');
+
+            robot.appendChild(image);
+
+            robots.push(robot);
+
+            return robot;
+        }
+
+        const robots = [];
+        
+        let miRobot = document.getElementById('miRobot');
+
+        let imagen = document.querySelector('.imagenRobot');
+        imagen.setAttribute('src', data.url);
+
+
+        //Creación del tablero
+        let tablero = document.getElementById('tablero');
+        for (let i = 0; i < 20; i++) {
+
+            let fila = document.createElement('tr');
+            fila.id = 'fila ' + i;
+            fila.classList.add('fila')
+
+            for (let j = 0; j < 20; j++) {
+                let celda = document.createElement('th');
+                celda.id = 'celda ' +i+ ', ' +j;
+                celda.classList.add('celda');
+                fila.appendChild(celda);
+
+                if (i == 0 && j == 0) {
+                    data.position.x = 0;
+                    data.position.y = 0;
+                    celda.appendChild( miRobot )
+                }
+            }
+
+            tablero.appendChild(fila);
+        }
+
+        document.addEventListener("keydown", function (event) {
+            handleKey(event)
+        })
+
+
+
+        function handleKey(event) {
+
+            const keyPressed = event.key;
+
+            if (keyPressed === 'ArrowUp') {
+
+                if (data.position.y == 0) return;
+
+                data.position.y -= 1;
+
+                moveRobot(miRobot, data)
+            }
+
+            if (keyPressed === 'ArrowDown') {
+
+                if (data.position.y == 19) return;
+
+                data.position.y += 1;
+
+                moveRobot(miRobot, data)
+
+            }
+
+            if (keyPressed === 'ArrowRight') {
+
+                if (data.position.x == 19) return;
+
+                data.position.x += 1;
+
+                moveRobot(miRobot, data)
+            }
+
+            if (keyPressed === 'ArrowLeft') {
+    
+                if (data.position.x == 0) return;
+
+                data.position.x -= 1;
+
+                moveRobot(miRobot, data)
+            }
+        }
+
+        function moveRobot(robot, data) {
+
+            const x = data.position.x;
+            const y = data.position.y;
+
+            const celda = document.getElementById('celda ' + y + ', ' + x);
+
+            celda.appendChild(robot);
+
+            if (data.id === '1000411742-3e557c4a-bb6a-45dc-9db1-57732ba311cc') {
+                setPosition(x, y);
+            }
+
+        }
+
+
+        //EJEMPLO
+        function setPosition(x, y) {
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(data));
+        }
+
+    </script>
 }
