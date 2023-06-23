@@ -8,10 +8,9 @@
 <style>
     #tablero {
         width: 100%;
-        
     }
 
-    .fila-tablero{
+    .fila-tablero {
         display: flex;
         height: 45px;
     }
@@ -27,14 +26,36 @@
         margin: auto;
     }
 
-    .jugador img {
-        position: relative;
-        width: 100%;
-        height: 100%;
+        .jugador img {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+    #puntuaciones {
+        display: flex;
+        flex-wrap: wrap;
     }
+
+        #puntuaciones .puntuacion-jugador {
+            flex: 1;
+            text-align: center;
+            font-size: 16px;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        #puntuaciones .nombre-jugador {
+            font-weight: bold;
+            font-size: 20px;
+        }
 </style>
 
+<h2 style="text-align: center">Puntuaciones</h2>
+<hr />
+
 <div id="puntuaciones"></div>
+<hr />
 
 <div id="tablero">
     @for (int i = 0; i < tamanioTablero; i++)
@@ -52,7 +73,7 @@
 
 @section scripts{
     <script>
-        
+
         // Crea una conexión con tu Hub
         let hub = $.connection.robotHub;
         const robots = [];
@@ -122,12 +143,19 @@
                 return false;
 
             let divRobot = imgRobot.replace("#link-imagen", robot.url).replace("#propio", propio ? "propio" : "");
+            let robotAnteriorCelda = $celda.attr("id-robot");
 
             $celda.html(divRobot);
             $celda.attr("id-robot", robot.id);
             $celda.css("background-color", `${robot.color}`)
 
-
+            if (robotAnteriorCelda && robotAnteriorCelda !== robot) {
+                modificarPuntuacion(robotAnteriorCelda, -1)
+                modificarPuntuacion(robot.id, 1)
+            }
+            else if (!robotAnteriorCelda) {
+                modificarPuntuacion(robot.id, 1)
+            }
         }
 
         function validarRobotEnJuego(robot) {
@@ -142,6 +170,8 @@
         function agregarRobotEnJuego(robot) {
             robots.push(robot);
             puntuaciones.push({ id: robot.id, jugador: robot.title, puntos: 0 });
+
+            $("#puntuaciones").append(divPuntuacion.replace("#jugador", robot.id));
         }
 
         function removerRobotCelda(robot) {
@@ -151,7 +181,6 @@
             const $celdaRobot = $tablero.find(`[id-robot="${robot.id}"]`);
 
             $celdaRobot.html("");
-            $celdaRobot.attr("id-robot", "");
         }
 
         function validarCelda({ y, x }) {
@@ -160,12 +189,19 @@
             return $celdaAnterior.length !== 0;
         }
 
-        //function modificarPuntuacion(idRobot, cantidad) {
-        //    let indexPuntuacion = puntuaciones.findIndex(p => p.id === idRobot);
+        function modificarPuntuacion(idRobot, cantidad) {
+            let indexPuntuacion = puntuaciones.findIndex(p => p.id === idRobot);
 
-        //    const puntuacion = puntuaciones[indexPuntuacion];
+            const puntuacion = puntuaciones[indexPuntuacion];
 
-        //}
+            puntuacion.puntos += cantidad;
+
+            puntuacion[indexPuntuacion] = puntuacion;
+
+            const $divPuntuacion = $("#puntuaciones").find(`[jugador=${idRobot}]`);
+            $divPuntuacion.find("p").html(puntuacion.jugador);
+            $divPuntuacion.find("span").html(puntuacion.puntos);
+        }
 
         actualizarRobot(robotPropio, true);
 
@@ -202,5 +238,5 @@
 
         })
 
-    </script>    
+    </script>
 }
