@@ -2,47 +2,175 @@
     ViewBag.Title = "Battle Robot";
 }
 
+<div id="espacioJuego">
+
+</div>
+
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
+        var cantidadColumnas = 20;
+        var cantidadFilas = 20;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            agregarActualizarRobot(infoRobot);
+        };
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+        var miRobot = {
+            id: '26f20529-a1cc-4b70-bd0a-a9e670845dec',//guid,
+            title: 'CAMILO CANO',
+            url: 'https://img.freepik.com/fotos-premium/atleta-rugby-campo-juego-deportivo-equipo-hombres-corriendo-jugador-puntua-intento-aptitud-pelota-partido-campeonato-ejercicio-activo-al-aire-libre-trabajo-equipo-accion-energia-vitores_590464-150695.jpg?w=1060',
+            color: 'red',
+            position: { x: 0, y: 0 },
+        };
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+                      
+        };
 
-            //EJEMPLO
-        function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        //EJEMPLO
+        function setPosition() {
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(miRobot));
+        }
+
+        var tamanoColumnas = "40px";
+        var jugadores = [];
+
+        var pintarTablero = function () {
+            var espacioJuego = document.getElementById("espacioJuego");
+
+            var tbl = document.createElement('table');
+            tbl.setAttribute("id", "tabla", 0);
+            tbl.style.width = '100%';
+            tbl.style.border = '2px solid black';
+
+            for (let fila = 0; fila < cantidadFilas; fila++) {
+                const tr = tbl.insertRow();
+                for (let columna = 0; columna < cantidadColumnas; columna++) {
+                    const td = tr.insertCell();
+                    td.setAttribute("id", "F" + fila + "C" + columna);
+                    td.setAttribute("name", "celda");
+                    td.setAttribute("height", "30px");
+                    td.setAttribute("width", tamanoColumnas);
+                    //$("#F" + fila + "C" + columna).attr('data-jugador', '');
+                    //td.appendChild(document.createTextNode(`fila${fila}/columna${columna}`));
+                    td.style.border = '2px solid black';
+                }
+            }
+            espacioJuego.appendChild(tbl);
+        };
+
+        var pintarRobotTablero = function (jugador) {
+            var posiscionRobotFila = jugador.position.x;
+            var posiscionRobotColumna = jugador.position.y;
+
+            var celdaJugador = document.getElementById("F" + posiscionRobotColumna + "C" + posiscionRobotFila );
+            $('#porcentajes').attr('data-percentage', 100);
+            celdaJugador.innerHTML = "<img id=\"IMG" + jugador.id + "\" src=\"" + jugador.url + "\" width=\"50%\" style=\"margin-left: 25%;\">";
+            celdaJugador.style.backgroundColor = jugador.color;
+            //setPosition();
+        };
+
+        pintarTablero();        
+
+        pintarRobotTablero(miRobot);
+
+        document.onkeydown = function (e) {
+            switch (e.keyCode) {
+                case 37:
+                    moverRobotTablero(miRobot,"left"); //show the message saying left"
+                    break;
+                case 38:
+                    moverRobotTablero(miRobot,"up"); //show the message saying up"
+                    break;
+                case 39:
+                    moverRobotTablero(miRobot,"right"); //show the message saying right"
+                    break;
+                case 40:
+                    moverRobotTablero(miRobot, "down"); //show the message saying down"
+                    break;
+            }
+        };
+
+        var moverRobotTablero = function (robot, lugar, robotAnterior)
+        {
+            if (robot.id == miRobot.id) {
+                var CeldaRobot = document.getElementById("F" + robot.position.y + "C" + robot.position.x);
+                CeldaRobot.innerHTML = "";
+
+                switch (lugar) {
+                    case "left":                       
+                        if (!(robot.position.x - 1 < 0))
+                            robot.position.x = robot.position.x - 1;
+                        break;
+                    case "right":
+                        if (!(robot.position.x + 1 >= cantidadColumnas))
+                         robot.position.x = robot.position.x + 1;
+                        break;
+                    case "up":
+                        if (!(robot.position.y - 1 < 0))
+                         robot.position.y = robot.position.y - 1;
+                        break;
+                    case "down":
+                        if (!(robot.position.y + 1 >= cantidadColumnas))
+                         robot.position.y = robot.position.y + 1;
+                        break;
+                }                
+
+                setPosition();
+            }
+            else
+            {
+                var CeldaRobot = document.getElementById("F" + robotAnterior.position.y + "C" + robotAnterior.position.x);
+                CeldaRobot.innerHTML = "";
             }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            var SiguienteCeldaRobot = document.getElementById("F" + robot.position.y + "C" + robot.position.x);
+            SiguienteCeldaRobot.innerHTML = "<img id=\"IMG" + robot.id + "\" src=\"" + robot.url + "\" width=\"50%\" style=\"margin-left: 25%;\" title=\"" + robot.title +"\">";
+            SiguienteCeldaRobot.style.backgroundColor = robot.color;
+        }; 
+
+        var agregarActualizarRobot = function (robot)
+        {
+            if (jugadores.length == 0)
+            {
+                jugadores.push(robot);
+            }                
+            else
+            {
+                let existe = false;
+
+                for (var i = 0; i < jugadores.length; i++) {
+                    if (JSON.parse(jugadores[i]).id == JSON.parse(robot).id) {
+                        existe = true;
+                        moverRobotTablero(JSON.parse(robot), "", JSON.parse(jugadores[i]));
+                        jugadores[i] = robot;
+                        break;
+                    }
+                }
+
+                if (!existe)
+                {
+                    jugadores.push(robot);
+                    moverRobotTablero(JSON.parse(robot), "", JSON.parse(robot));
+                }
+            }
+
+            
+        }
 
     </script>    
 }
