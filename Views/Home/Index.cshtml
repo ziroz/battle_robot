@@ -1,48 +1,200 @@
 ﻿@{
     ViewBag.Title = "Battle Robot";
 }
+<table>
+
+    @for (int y = 1; y <= 10; y++)
+    {
+        <tr>
+            @for (int x = 1; x <= 10; x++)
+            {
+                <td id="@x@y">
+                    <div id="Hormiga">
+                        <label id="nombre"></label>
+                        <p id="log"></p>
+                        @*<img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.freepng.es%2Fpng-7o9co7%2F&psig=AOvVaw2wtZkOZaVnoxQzQImqPYVe&ust=1687637558936000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCMCs0fyZ2v8CFQAAAAAdAAAAABAE" />*@
+                    </div>
+                    @x @y
+                </td>
+            }
+        </tr>
+    }
+</table>
+
+
+@*Estructura del robot*@
+<div id="Hormiga">
+    <label id="nombre"></label>
+    <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.freepng.es%2Fpng-7o9co7%2F&psig=AOvVaw2wtZkOZaVnoxQzQImqPYVe&ust=1687637558936000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCMCs0fyZ2v8CFQAAAAAdAAAAABAE" />
+</div>
+
+
+@*Movimiento del robot*@
+
+
+
+
+
+<style>
+    td {
+        border: black 5px solid;
+        padding: 50px;
+    }
+</style>
+
+<style type="text/css">
+    #cuadrado {
+        background-color: #f00e0e;
+        border-radius: 15px;
+        height: 110px;
+        width: 100px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 40vh;
+    }
+</style>
 
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            console.log(json);
+        };
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
 
-            //EJEMPLO
+        var robot = {
+            id: 'hormiga123',//guid,
+            title: 'Camponotus',
+            url: 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.freepng.es%2Fpng-7o9co7%2F&psig=AOvVaw2wtZkOZaVnoxQzQImqPYVe&ust=1687637558936000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCMCs0fyZ2v8CFQAAAAAdAAAAABAE',
+            color: 'red',
+            position: { x: 0, y: 0 },
+        };
+
+
+        // crea un elemento img
+        var imagen = document.createElement("img");
+        imagen.src = robot.url;
+        document.getElementById('nombre').innerHTML = robot.title;
+
+
+
+        //EJEMPLO
         function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+        //De esta forma notificas a los demás la posición de tu robot
+        hub.invoke('SendRobotInformation', JSON.stringify(robot));
+
+
+        /*movimientos del robot*/
+        //const log = document.getElementById("log");
+
+        //document.addEventListener("keydown", logKey);
+
+        //function logKey(e) {
+        //    log.textContent += ` ${e.code}`;
+        //}
+
+        //document.onkeydown = logKey;
+
+
+        //        document.addEventListener("keydown", function (event) {
+        //            console.log('evento', event);
+        //            handleKey(event)
+        //        })
+
+        //          document.addEventListener('keydown', (event) => {
+        //        var keyValue = event.key;
+        //        var codeValue = event.code;
+        //}
+
+        //        function myFunction() {
+        //            document.getElementById("demo").innerHTML = "You pressed a key inside the input field";
+        //        }
+
+        //        function myFunction() {
+        //            document.getElementById("demo").innerHTML = "";
+        //
+        //document.onkeydown = test;
+        //document.addEventListener('keydown', test);
+        //function test(event) {
+        //    if (event.keyCode == '37') {//Tecla con la flecha hacia la izquierda
+        //        alert('Tu codigo funciona correctamente');
+        //    }
+        //    if (event.keyCode == '39') { //Tecla con la flecha hacia la Derecha
+        //        alert('Bien echo =)');
+        //    }
+        //}}
+
+        //document.addEventListener("keydown", event => {
+        //    if (event.keyCode == 13) { //Tecla enter
+        //        console.log('hola ney');
+        //    }
+        //});
+
+    </script>
+
+    @*script de movimiento*@
+    <script>
+        //document.addEventListener('keydown', colorGreen);
+        //function colorRed(e) {
+        //    if (e.keyCode == '38') {
+        //        document.getElementById('cuadrado').style.background = 'red';
+        //    }
+        //}
+        //document.addEventListener('keydown', colorGreen);
+        //function colorWhite(e) {
+        //    if (e.keyCode == '36') {
+        //        document.getElementById('cuadrado').style.background = 'white';
+        //    }
+        //}
+        document.addEventListener('keydown', colorblack);
+        function colorblack(e) {
+            if (e.keyCode == '38') {
+                document.getElementById('Hormiga').style.background = 'black';
             }
+        }
+        document.addEventListener('keydown', coloryellow);
+        function coloryellow(e) {
+            if (e.keyCode == '40') {
+                document.getElementById('Hormiga').style.background = 'yellow';
+            }
+        }
+        document.addEventListener('keydown', colorRed);
+        function colorRed(e) {
+            if (e.keyCode == '37') {
+                document.getElementById('Hormiga').style.background = '#f4a130';
+            }
+        }
+        document.addEventListener('keydown', colorGreen);
+        function colorGreen(e) {
+            if (e.keyCode == '39') {
+                document.getElementById('Hormiga').style.background = '#f00ea2';
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            }
+        }
 
-    </script>    
+
+
+    </script>
 }
