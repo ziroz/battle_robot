@@ -2,47 +2,147 @@
     ViewBag.Title = "Battle Robot";
 }
 
+<div id="tablero"></div>
+
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            console.log(json);
+        };
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAlltablero = function () {
+            console.log("ClearAlltablero");
+        };
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
+        var robot = {
+            id: 'XXXX',//guid,
+            name: 'MI NOMBRE',
+            url: 'https://www.flaticon.es/icono-gratis/squirtle_188988',
+            color: '#000000',
+            position: { x: 0, y: 0 },
+        };
 
-            //EJEMPLO
+        //EJEMPLO
         function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot)); 
+        }
+
+        //De esta forma notificas a los demás la posición de tu robot
+        //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+
+        const tablero = document.getElementById("tablero");
+        // Tamaño del tablero
+        const tamano = 10;
+
+        function creartablero() {
+            for (let i = 0; i < tamano; i++) {
+                const fila = document.createElement("div");
+                fila.classList.add("fila");
+
+                for (let j = 0; j < tamano; j++) {
+                    const celda = document.createElement("div");
+                    celda.setAttribute("id", `celda-${j}-${i}`);
+                    celda.classList.add("celda");
+                    fila.appendChild(celda);
+                }
+
+                tablero.appendChild(fila);
             }
+        }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        creartablero();
 
-    </script>    
+        function moverArriba() {
+            if (robot.position.y > 0) {
+                robot.position.y--;
+                actuTablero();
+            }
+        }
+
+        function moverAbajo() {
+            if (robot.position.y < tamano - 1) {
+                robot.position.y++;
+                actuTablero();
+            }
+        }
+
+        function moverIzquierda() {
+            if (robot.position.x > 0) {
+                robot.position.x--;
+                actuTablero();
+            }
+        }
+
+        function moverDerecha() {
+            if (robot.position.x < tamano - 1) {
+                robot.position.x++;
+                actuTablero();
+            }
+        }
+
+        function actuTablero() {
+            const celda = document.getElementById(`celda-${robot.position.x}-${robot.position.y}`);
+            celda.style.backgroundColor = robot.color;
+            celda.innerHTML = `<img src="${robot.url}" alt="${robot.name}" class="robot-imagen">`;
+        }
+
+        document.addEventListener("keydown", (event) => {
+            switch (event.key) {
+                case "ArrowUp":
+                    moverArriba();
+                    break;
+                case "ArrowDown":
+                    moverAbajo();
+                    break;
+                case "ArrowLeft":
+                    moverIzquierda();
+                    break;
+                case "ArrowRight":
+                    moverDerecha();
+                    break;
+            }
+        });
+
+    </script>
 }
+
+<style>
+
+    #tablero {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fila {
+        display: flex;
+    }
+
+    .celda {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #000;
+    }
+
+    .robot-imagen {
+        width: 100%;
+        height: 100%;
+    }
+
+
+</style>
