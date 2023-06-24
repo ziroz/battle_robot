@@ -1,48 +1,107 @@
 ﻿@{
     ViewBag.Title = "Battle Robot";
+
 }
+
+<div>
+    <img />
+
+</div>
 
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+                var div = document.createElement('div');
+                div.id = 'robot';
+                div.innerHTML = '♥';
+                generartablero(10, div);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            console.log(json);
+        };
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
+        var robot = {
+            id: 'XXXX',//guid,
+            title: 'LUISA',
+            url: 'URL PUBLICA DE UNA IMAGEN',
+            color: '#000000',
+            position: { x: 0, y: 0 },
+        };
 
-            //EJEMPLO
+        //EJEMPLO
         function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+        function generartablero(cantidad, robot) {
+            var center = document.createElement('center');
+            
+            var tablero = document.createElement('table');
+            for (var i = 0; i < cantidad; i++) {
+                var tr = document.createElement('tr');
+                for (var j = 0; j < cantidad; j++) {
+                    var td = document.createElement('td');
+                    if (i == 0 && j == 0) {
+                        td.appendChild(robot);
+                    }
+                    td.setAttribute('class', 'cell');
+                    td.setAttribute('id', '' + i + ',' + j);
+                    tr.appendChild(td);
+                }
+                tablero.appendChild(tr);
             }
+            center.appendChild(tablero);
+            document.body.appendChild(center);
+        }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        document.addEventListener("keydown", function (event) {
+            //Obtenemos el elemento
+            console.log(event.key);
+            let robot = document.getElementById('robot');
+            let actualPosition = robot.parentElement.id;
+            debugger;
+            let x, y;
+            if (event.key == "ArrowUp") {
+                y = parseInt(actualPosition.substring(0, 1)) + 1;
+                x = parseInt(actualPosition.substring(2, 3));
 
-    </script>    
+            }
+            else if (event.key == "ArrowLeft") {
+                y = parseInt(actualPosition.substring(0, 1));
+                x = parseInt(actualPosition.substring(2, 3)) - 1;
+
+            }
+            else if (event.key == "ArrowDown") {
+                y = parseInt(actualPosition.substring(0, 1)) + 1;
+                x = parseInt(actualPosition.substring(2, 3));
+            }
+            else if (event.key == "ArrowRight") {
+                y = parseInt(actualPosition.substring(0, 1));
+                x = parseInt(actualPosition.substring(2, 3)) + 1;
+            }
+            debugger;
+            setPosition(x,y);
+            document.getElementById('' + x + ',' + y).append(robot);
+        });
+
+
+    </script>
 }
