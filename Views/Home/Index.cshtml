@@ -1,0 +1,143 @@
+﻿@{
+    ViewBag.Title = "Battle Robot";
+}
+
+
+@section scripts{
+    <script>
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
+
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
+
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
+            console.log(json);
+        };
+
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
+
+        var robot = {
+            id: '51515525',//guid,
+            title: 'Camilo Gomez',
+            url: 'https://eltallerdehector.com/wp-content/uploads/2022/06/dd088-mickey-mouse-png-sin-fondo.png',
+            color: 'yellow',
+            position: { x: 0, y: 0 },
+
+        };
+
+        //EJEMPLO
+        function setPosition(x, y) {
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
+
+        //De esta forma notificas a los demás la posición de tu robot
+
+
+        cuadro = document.getElementsByClassName("cuadro")
+        function ubicarRobot() {
+            for (i = 0; i < cuadro.length; i++) {
+                //console.log(cuadro[i].id);
+                let posicion = robot.position.x.toString() + robot.position.y.toString()
+                if (posicion == cuadro[i].id) {
+
+                    console.log("posicion", posicion)
+                    console.log("cuadro", cuadro[i].id)
+                    const container = document.getElementById(cuadro[i].id);
+                    console.log(container)
+                    const lamaquina = document.createElement("img");
+                    lamaquina.src = robot.url;
+                    lamaquina.style = `width: 100%; height: 100%;background-color:${robot.color}`;
+                    while (container.firstChild) {
+                        container.removeChild(container.firstChild);
+                    }
+                    container.appendChild(lamaquina)
+                }
+            }
+        }
+        ubicarRobot();
+        function moverDerecha() {
+            if (robot.position.y <= 18) {
+                robot.position.y = robot.position.y + 1
+                ubicarRobot();
+            }
+
+        }
+        function moverIzquierda() {
+            if (robot.position.y > 0) {
+                robot.position.y = robot.position.y - 1
+                ubicarRobot();
+            }
+        }
+        function moverArriba() {
+            if (robot.position.x > 0) {
+                robot.position.x = robot.position.x - 1
+                ubicarRobot();
+            }
+
+        }
+        function moverAbajo() {
+            if (robot.position.x <= 18) {
+                robot.position.x = robot.position.x + 1
+                ubicarRobot();
+            }
+        }
+        document.addEventListener('keydown', (event) => {
+            if (event.key === "ArrowRight") {
+                moverDerecha();
+                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            }
+
+        }, false);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === "ArrowLeft") {
+                moverIzquierda();
+                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            }
+
+        }, false);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === "ArrowDown") {
+                moverAbajo();
+                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            }
+
+        }, false);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === "ArrowUp") {
+                moverArriba();
+                hub.invoke('SendRobotInformation', JSON.stringify(robot));
+            }
+
+        }, false);
+    </script>
+}
+
+<div style="display:flex;flex-direction:column">
+    @{
+        for (int i = 0; i < 20; i++)
+        {
+            <div style="display:flex;flex-direction:row">
+                @{
+                    for (int j = 0; j < 20; j++)
+                    {
+                        <div style="border: black 1px solid; width:25px; height:25px;" id="@i@j" class="cuadro">
+                        </div>
+                    }
+                }
+            </div>
+        }
+    }
+</div>

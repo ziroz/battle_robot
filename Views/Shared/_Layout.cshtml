@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Mi aplicación ASP.NET</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+
+    <div class="container body-content">
+        @RenderBody()
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signalr.js/2.4.2/jquery.signalR.min.js" integrity="sha512-U8fIxQGwYIgusHelROib0WNuTus1qWT719oOt8lay+6CoVZr0TtMf2y9avIGUuYmgVJ3l/jtOea/d4uitDrN5A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/signalr/hubs"></script>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>
