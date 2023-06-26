@@ -2,49 +2,11 @@
     ViewBag.Title = "Battle Robot";
 }
 
-<div class="matrix">
-    <table>
-        
-
-@for (int i = 0; i < 20; i++)
-{
-    <tr class="row"></tr>
-    for (int j = 0; j < 20; j++)
-    {
-        <td class="cell"></td>
-
-    }
-
-}
-    </table>
-</div>
-
+<div id="tablero"></div>
 
 @section scripts{
-    <style>
-
-        .matrix {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .row {
-            display: flex;
-        }
-
-        .cell {
-            border: 1px solid black;
-            padding: 60px;
-            
-        }
-    </style>
-    <script>
-
-        // Crea una conexión con tu Hub
+    <script>// Crea una conexión con tu Hub
         var hub = $.connection.robotHub;
-        const snakeboard = document.getElementById("snakeboard");
-
-        const snakeboard_ctx = snakeboard.getContext("2d");
 
         // Inicia la conexión
         $.connection.hub.start()
@@ -67,16 +29,15 @@
         };
 
         var robot = {
-            id: '1000',//guid,
-            title: 'Pablo Caro',
-            url: 'https://cdn-icons-png.flaticon.com/512/942/942354.png?w=740&t=st=1687547872~exp=1687548472~hmac=14ea663fbaf1d711e851f10cbec6fb471788aafd6e00cff9a56cc85065eae665',
-            color: '#470050',
+            id: 'XXXX',//guid,
+            title: 'MI NOMBRE',
+            url: 'URL PUBLICA DE UNA IMAGEN',
+            color: '#000000',
             position: { x: 0, y: 0 },
         };
 
         //EJEMPLO
         function setPosition(x, y) {
-
             //de esta manera notificamos a los demás la nueva posición de nuestro robot
             hub.invoke('SendRobotInformation', JSON.stringify(robot));
         }
@@ -84,43 +45,125 @@
         //De esta forma notificas a los demás la posición de tu robot
         //hub.invoke('SendRobotInformation', JSON.stringify(robot));
 
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+        //CODIGO CRISTOBAL
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
 
+        // CREACION TABLERO
 
-        function change_direction(event) {
-            const LEFT_KEY = 37;
-            const RIGHT_KEY = 39;
-            const UP_KEY = 38;
-            const DOWN_KEY = 40;
+        let dimensionTablero = 20;
 
-            // Prevent the snake from reversing
+        function dibujarTablero(tamano) {
+            var contenido = '';
 
-            if (changing_direction) return;
-            changing_direction = true;
-            const keyPressed = event.keyCode;
-            const goingUp = dy === -10;
-            const goingDown = dy === 10;
-            const goingRight = dx === 10;
-            const goingLeft = dx === -10;
-            if (keyPressed === LEFT_KEY && !goingRight) {
-                dx = -10;
-                dy = 0;
+            // Generar filas y columnas del tablero
+            for (var i = 0; i < tamano; i++) {
+                contenido += '<div class="fila">';
+                for (var j = 0; j < tamano; j++) {
+                    // Asignamos un id para cada pivote de la tabla.
+                    var idCasilla = 'casilla-' + i + '-' + j;
+                    contenido += '<div id="' + idCasilla + '" class="casilla"></div>';
+                }
+                contenido += '</div>';
             }
-            if (keyPressed === UP_KEY && !goingDown) {
-                dx = 0;
-                dy = -10;
-            }
-            if (keyPressed === RIGHT_KEY && !goingLeft) {
-                dx = 10;
-                dy = 0;
-            }
-            if (keyPressed === DOWN_KEY && !goingUp) {
-                dx = 0;
-                dy = 10;
-            }
+
+            // Establecer el contenido del contenedor
+            tablero.innerHTML = contenido;
         }
 
+        var tablero = document.getElementById('tablero');
 
-    </script>
 
+        dibujarTablero(dimensionTablero);
+
+        //---------------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------------
+
+        //DINÁMICA ROBOT
+
+        // Añadir el personaje en la posición inicial
+        var idCasillaInicial = 'casilla-0-0';
+        var casillaInicial = document.getElementById(idCasillaInicial);
+        casillaInicial.classList.add('personaje');
+
+
+        document.addEventListener('keydown', function (event) {
+            var idCasillaActual = obtenerIdCasillaPersonaje();
+            var casillaActual = document.getElementById(idCasillaActual);
+
+            // Obtener las posiciones actualmente ocupadas por el personaje
+            var posiciones = idCasillaActual.split('-');
+            var fila = parseInt(posiciones[1]);
+            var columna = parseInt(posiciones[2]);
+
+            // Mover el personaje según la tecla presionada
+            switch (event.key) {
+                case 'ArrowUp':
+                    if (fila > 0) {
+                        fila--;
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (fila < dimensionTablero - 1) {
+                        fila++;
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (columna > 0) {
+                        columna--;
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (columna < dimensionTablero - 1) {
+                        columna++;
+                    }
+                    break;
+                default:
+                    return;
+            }
+
+            // Obtener el id de la nueva casilla del personaje
+            var idNuevaCasilla = 'casilla-' + fila + '-' + columna;
+            var nuevaCasilla = document.getElementById(idNuevaCasilla);
+
+            // Mover el personaje a la nueva casilla
+            casillaActual.classList.remove('personaje');
+            nuevaCasilla.classList.add('personaje');
+        });
+
+        function obtenerIdCasillaPersonaje() {
+            var casillas = document.getElementsByClassName('casilla');
+
+            for (var i = 0; i < casillas.length; i++) {
+                if (casillas[i].classList.contains('personaje')) {
+                    return casillas[i].id;
+                }
+            }
+
+            return null; // Si no se encuentra ninguna casilla con la clase 'personaje'
+        }</script>
+
+    <style>
+
+        .fila {
+            display: flex;
+        }
+
+        .casilla {
+            width: 50px;
+            height: 50px;
+            border: 1px solid black;
+        }
+
+        .personaje {
+            background-color: green;
+            width: 50px;
+            height: 50px;
+        }
+    </style>
 }
-
