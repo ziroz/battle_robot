@@ -1,48 +1,201 @@
 ﻿@{
     ViewBag.Title = "Battle Robot";
+    var columna = 0;
+    var fila = 0;
+    var recuadro = 0;
 }
 
 @section scripts{
     <script>
-            // Crea una conexión con tu Hub
-            var hub = $.connection.robotHub;
+        // Crea una conexión con tu Hub
+        var hub = $.connection.robotHub;
 
-            // Inicia la conexión
-            $.connection.hub.start()
-                .done(function () {
-                    console.log('Now connected, connection ID=' + $.connection.hub.id);
-                })
-                .fail(function () {
-                    console.log('Could not Connect!');
-                });
+        // Inicia la conexión
+        $.connection.hub.start()
+            .done(function () {
+                console.log('Now connected, connection ID=' + $.connection.hub.id);
+            })
+            .fail(function () {
+                console.log('Could not Connect!');
+            });
 
-            //Recibes los cambios que ha tenido cada robot
-            hub.client.ReceiveNotification = function (infoRobot) {
-                let json = JSON.parse(infoRobot);
-                console.log(json);
-            };
+        //Recibes los cambios que ha tenido cada robot
+        hub.client.ReceiveNotification = function (infoRobot) {
+            let json = JSON.parse(infoRobot);
 
-            //Limpiar todo el tablero, no debe quedar ninguna celda marcada
-            hub.client.ClearAllBoard = function () {
-                console.log("ClearAllBoard");
-            };
+            console.log(json);
+        };
 
-            var robot = {
-                id: 'XXXX',//guid,
-                title: 'MI NOMBRE',
-                url: 'URL PUBLICA DE UNA IMAGEN',
-                color: '#000000',
-                position: { x: 0, y: 0 },
-            };
 
-            //EJEMPLO
+        //Limpiar todo el tablero, no debe quedar ninguna celda marcada
+        hub.client.ClearAllBoard = function () {
+            console.log("ClearAllBoard");
+        };
+
+        var robot = {
+            id: 'XXXX',//guid,
+            title: 'MI NOMBRE',
+            url: 'URL PUBLICA DE UNA IMAGEN',
+            color: '#000000',
+            position: { x: 0, y: 0 },
+        };
+
+        //EJEMPLO
         function setPosition(x, y) {
-                //de esta manera notificamos a los demás la nueva posición de nuestro robot
-                hub.invoke('SendRobotInformation', JSON.stringify(robot));
-            }
+            //de esta manera notificamos a los demás la nueva posición de nuestro robot
+            hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        }
 
-            //De esta forma notificas a los demás la posición de tu robot
-            //hub.invoke('SendRobotInformation', JSON.stringify(robot));
+        //De esta forma notificas a los demás la posición de tu robot
+        //hub.invoke('SendRobotInformation', JSON.stringify(robot));
 
-    </script>    
+    </script>
 }
+
+
+<div style="display:flex;flex-direction:column" id="table">
+    @{
+        for (int i = 0; i < 20; i++)
+        {
+            <div style="display:flex;flex-direction:row" class="cuerpo">
+                @{
+                    for (int j = 0; j < 20; j++)
+                    {
+                        <div style="border: black 1px solid; width:60px; height:60px;" data-columna=@i data-fila="@j" id="@($"{i}_{j}")">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    }
+</div>
+
+<script>
+
+    var elementoRobot = document.getElementById("0_0");
+    var ubicacion = "0_0"
+
+    function ubicarRobot() {
+
+        var etiqueta = document.createElement('p');
+        var text = document.createTextNode("Robot");
+        etiqueta.id = "robot";
+        etiqueta.appendChild(text)
+        elementoRobot.appendChild(etiqueta);
+    }
+
+    function reubicarRobot(params) {
+
+        var etiqueta = document.createElement('p');
+        var text = document.createTextNode("Robot");
+        etiqueta.id = "robot";
+        etiqueta.appendChild(text)
+
+        var nuevaOcupacion = document.getElementById(params);
+        nuevaOcupacion.appendChild(etiqueta);
+
+        var etiqeutaUbicacion = document.getElementById("robot").parentNode;
+        etiqeutaUbicacion.style.background = "green";
+
+        var posiciones = params.split("_");
+        var elBray = {
+            id: "LaRatica",
+            tittle: "Brayan",
+            color: "green",
+            url: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Escudo_de_Atl%C3%A9tico_Nacional.png",
+            position: {
+                x: Math.floor(posiciones[0]),
+                y: Math.floor(posiciones[1])
+            }
+        }
+        ubicacion = params;
+
+        hub.invoke('SendRobotInformation', JSON.stringify(elBray));
+
+        console.log(elBray);
+    }
+
+
+    function down() {
+        var posiciones = ubicacion.split("_");
+        var numeroPrimerPosicion = Math.floor(posiciones[0]);
+        if (numeroPrimerPosicion + 1 >= 20) {
+            return;
+        }
+
+        var posicionesFInales = (numeroPrimerPosicion + 1) + "_" + posiciones[1];
+
+        reubicarRobot(posicionesFInales);
+    }
+
+    function up() {
+        var posiciones = ubicacion.split("_");
+        var numeroPrimerPosicion = Math.floor(posiciones[0]);
+        if (numeroPrimerPosicion - 1 < 0) {
+            return;
+        }
+
+        var posicionesFInales = (numeroPrimerPosicion - 1) + "_" + posiciones[1];
+
+        reubicarRobot(posicionesFInales);
+    }
+
+    function right() {
+        var posiciones = ubicacion.split("_");
+        var numeroPrimerPosicion = Math.floor(posiciones[1]);
+        if (numeroPrimerPosicion + 1 > 20) {
+            return;
+        }
+
+        var posicionesFInales = posiciones[0] + "_" + (numeroPrimerPosicion + 1);
+
+        reubicarRobot(posicionesFInales);
+
+    }
+
+    function left() {
+        var posiciones = ubicacion.split("_");
+        var numeroPrimerPosicion = Math.floor(posiciones[1]);
+        if (numeroPrimerPosicion - 1 < 0) {
+            return;
+        }
+
+        var posicionesFInales = posiciones[0] + "_" + (numeroPrimerPosicion - 1);
+
+        reubicarRobot(posicionesFInales);
+    }
+
+    document.addEventListener('keydown', (event) => {
+        var keyValue = event.key;
+        var codeValue = event.code;
+
+        if (codeValue == "ArrowDown") {
+            down();
+        }
+
+        if (codeValue == "ArrowUp") {
+            up();
+        }
+
+        if (codeValue == "ArrowRight") {
+            right();
+        }
+
+        if (codeValue == "ArrowLeft") {
+            left();
+        }
+
+    }, false);
+
+    ubicarRobot();
+
+
+</script>
+
+<style>
+    p {
+        font-family: "FontAwesome", sans-serif;
+        font-size: 100%;
+    }
+</style>
